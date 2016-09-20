@@ -45,13 +45,13 @@ If a sub-resource is only accessible via its parent resource and may not exists 
 
 However, if the resource can be accessed directly via its unique id, then the API should expose it as a top-level resource. For example, customer is a collection for sales orders; however, sales orders have globally unique id and some services may choose to access the orders directly, for instance:
 
-    /customer/1681e6b88ec1
-    /sales-order/5273gh3k525a
+    /customers/1681e6b88ec1
+    /sales-orders/5273gh3k525a
 
-## {{ book.should }} Limit of Resources
+## {{ book.should }} Limit number of Resources
 
-To keep maintenance manageable, and to avoid violations of the “separation of concern” principle, an API should not expose more than 16 resources. If you exceed 16 resources, first check if you can split them into separate subdomains with distinct APIs.
+To keep maintenance and service evolution manageable, we should follow "functional segmentation" and "separation of concern" design principles and do not mix different business functionalities in same API definition. In this sense the number of resources exposed via API should be limited - our experience is that a typical range of resources for a well-designed API is between 4 and 8. There may be exceptions with more complex business domains that require more resources, but you should first check if you can split them into separate subdomains with distinct APIs.
 
-## {{ book.should }} Limit of Sub-Resource Levels
+## {{ book.should }} Limit number of Sub-Resource Levels
 
 There are main resources (with root url paths) and sub-resources (or “nested” resources with non-root urls paths). Use sub-resources if their life cycle is (loosely) coupled to the main resource, i.e. the main resource works as collection resource of the subresource entities. You should use <= 3 sub-resource (nesting) levels -- more levels increase API complexity and url path length. (Remember, some popular web browsers do not support URLs of more than 2000 characters)
