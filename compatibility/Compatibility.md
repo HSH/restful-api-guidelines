@@ -29,7 +29,8 @@ Apply the following rules to evolve RESTful APIs in a backward-compatible way:
 * Enum ranges can be reduced when used as input parameters, only if the server
   is ready to accept and handle old range values too. Enum values can be reduced
   when used as output parameters.
-* Use x-extensible-enum, if range is used for output parameters and likely to
+* Use [`x-extensible-enum`](#should-used-openended-list-of-values-xextensibleenum-instead-of-enumerations),
+  if range is used for output parameters and likely to
   be extended with growing functionality. It defines an open list of explicit
   values and clients must be agnostic to new values (e.g. via casuistic with
   default behavior).
@@ -43,13 +44,37 @@ How to do this:
 
 * Ignore new and unknown fields in the payload (see also Fowler’s
   “[TolerantReader](http://martinfowler.com/bliki/TolerantReader.html)” post)
-* Be prepared for new enum values declared with x-extensible-enum (see above);
+* Be prepared for new enum values declared with
+  [`x-extensible-enum`](#should-used-openended-list-of-values-xextensibleenum-instead-of-enumerations);
   provide default behavior for unknown values, if applicable
 * Follow the redirect when the server returns an “HTTP 301 Moved Permanently” response code
 * Be prepared to handle HTTP status codes not explicitly specified in endpoint definitions! Note also, that status codes are extensible -- default handling is how you would treat the corresponding x00 code (see [RFC7231  Section 6](https://tools.ietf.org/html/rfc7231#section-6))
 
-## {{book.must}} Always Return JSON Objects As Top-Level Data Structures To Support Extensibility
+## {{ book.must }} Always Return JSON Objects As Top-Level Data Structures To Support Extensibility
+
 In a response body, you must always return a JSON objects (and not e.g. an array) as a top level data structure to support future extensibility. JSON objects support compatible extension by additional attributes. This allows you to easily extend your response and e.g. add pagination later, without breaking backwards compatibility.
+
+## {{ book.should }} Used Open-Ended List of Values (x-extensible-enum) Instead of Enumerations
+
+Enumerations are per definition closed sets of values, that are assumed to be complete and not
+intended for extension. This closed principle of enumerations imposes compatibility issues when
+an enumeration must be extended. To avoid these issues, we strongly recommend to use an open-ended
+list of values instead of an enumeration unless:
+
+1. the API has full control of the enumeration values, i.e. the list of values does not depend
+   on any external tool or interface, and
+2. the list of value is complete with respect to any thinkable and unthinkable future feature.
+
+To specify an open-ended list of values use the marker `x-extensible-enum` as follows:
+
+    deliver_methods:
+      type: string
+      x-extensible-enum:
+        - parcel
+        - letter
+        - email
+
+**Note:** `x-extensible-enum` is not JSON Schema conform but will be ignored by most tools.
 
 ## {{ book.should }} Avoid Versioning
 
@@ -80,12 +105,16 @@ application/x.zalando.cart+json;version=2. For incompatible changes, a new
 media type version for the resource is created. To generate the new
 representation version, consumer and producer can do content negotiation using
 the HTTP Content-Type and Accept headers. Note: This versioning only applies to
-the content schema, not to URI or method semantics.
+the request and response content schema, not to URI or method semantics.
 
-In this example, a client wants only the new version:
+In this example, a client wants only the new version of the response:
+
+    Accept: application/x.zalando.cart+json;version=2
+
+A server responding to this, as well as a client sending a request with content should use the Content-Type header, declaring that one is sending the new version:
 
     Content-Type: application/x.zalando.cart+json;version=2
-    Accept: application/x.zalando.cart+json;version=2
+
 
 Using header versioning should:
 
@@ -95,8 +124,12 @@ Using header versioning should:
 Hint: [OpenAPI currently doesn’t support content
 negotiation](https://github.com/OAI/OpenAPI-Specification/issues/146), though [a comment in this
 issue](https://github.com/OAI/OpenAPI-Specification/issues/146#issuecomment-117288707) mentions
-a workaround (using a fragment identifier that
-gets stripped off).
+a workaround (using a fragment identifier that gets stripped off).
+Another way would be to document just the new version, but let the server accept the old
+one (with the previous content-type).
+
+Until an incompatible change is necessary, it is recommended to stay with the standard
+`application/json` media type.
 
 ## {{ book.must }} Do Not Use URI Versioning
 

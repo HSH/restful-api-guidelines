@@ -18,9 +18,17 @@ Events are part of a service’s interface to the outside world equivalent in st
 
 Nakadi defines a structure called an _EventType_, which describes details for a particular kind of event. The EventType declares standard information, such as a name, an owning application (and by implication, an owning team), a well known event category (business process or data change), and a schema defining the event payload. It also allows the declaration of validation and enrichment strategies for events, along with supplemental information such as how events are partitioned in the stream. 
 
-An EventType is registered with Nakadi via its _Schema Registry API_. Once the EventType is created, individual events that conform to the type and its payload schema can be published, and consumers can access them as stream of Events. [Nakadi's Open API definitions](https://github.com/zalando/nakadi/blob/nakadi-jvm/api/nakadi-event-bus-api.yaml) include the definitions for two main categories, business events (BusinessEvent), and data change events (DataChangeEvent), as well as a generic 'undefined' type. 
+An EventType is registered with Nakadi via its _Schema Registry API_. Once the EventType is created, individual events that conform to the type and its payload schema can be published, and consumers can access them as stream of Events. [Nakadi's Open API definitions](https://github.com/zalando/nakadi/blob/master/api/nakadi-event-bus-api.yaml) include the definitions for two main categories, business events (BusinessEvent), and data change events (DataChangeEvent), as well as a generic 'undefined' type. 
 
 The service specific data defined for an event is called the _payload_. Only this non-Nakadi defined part of the event is expected to be submitted with the EventType schema.  When defining an EventType's payload schema as part of your API and for review purposes, it's ok to declare the payload as an object definition using Open API, but please note that Nakadi currently expects the EventType's schema to be submitted as JSON Schema and not as Open API JSON or YAML. Further details on how to register EventTypes are available in the Nakadi project's documentation.
+
+## {{ book.must }} Events must not provide sensitive customer personal data.
+
++Similar to API permission scopes, there will be Event Type permissions passed via an OAuth token supported in near future by the Nakadi API. Hence, Nakadi will restrict event data access to clients with sufficient authorization. However, teams are asked to note the following:
+
+ - Sensitive data, such as (e-mail addresses, phone numbers, etc) are subject to strict access and data protection controls. 
+ 
+ - Event type owners **must not** publish sensitive information unless it's mandatory or neccessary to do so. For example, events sometimes need to provide personal data, such as delivery addresses in shipment orders  (as do other APIs), and this is fine.
 
 ## {{ book.must }} Use Business Events to signal steps and arrival points in business processes
 
@@ -126,7 +134,7 @@ These are considered backwards-incompatible changes, as seen by consumers  -
 - Changing the type of a field, object, enum or array.
 - Changing the order of values with different type in an array (also known as a tuple).
 - Adding a new optional field to redefine the meaning of an existing field (also known as a co-occurrence constraint).
-- Adding a value to an enumeration (note that `x-extensible-enum` is not available in JSON Schema).
+- Adding a value to an enumeration (note that [`x-extensible-enum`](../compatibility/Compatibility.md#should-used-openended-list-of-values-xextensibleenum-instead-of-enumerations) is not available in JSON Schema).
 
 ## {{ book.must }} Use unique Event identifiers
 
