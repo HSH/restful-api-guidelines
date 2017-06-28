@@ -13,8 +13,19 @@ There are two techniques to change APIs without breaking them:
 - introduce new API versions and still support older versions
 
 We strongly encourage using compatible API extensions and discourage versioning.
-With Postel’s Law in mind, here are some rules for providers and consumers that
-allow us to make compatible changes without versioning:
+With Postel’s Law in mind, the following five rules for providers and consumers
+allow us to make compatible changes without versioning.
+
+Please note that the compatibility guarantees are for the on-the-wire format,
+i.e. they ensure that consumers relying on the old API definition will work
+with servers which already implement a newer API definition, assuming both API
+designers and client and server implementors adhere to the following rules.
+
+**Note:** Binary or source compatibility of code generated from an API definition
+is not covered by these rules.  If client implementations update their generation
+process to a new version of the API definition, it has to be expected that code
+changes are necessary.
+
 
 ## {{ book.should }} Prefer Compatible Extensions
 
@@ -53,6 +64,35 @@ How to do this:
 ## {{ book.must }} Always Return JSON Objects As Top-Level Data Structures To Support Extensibility
 
 In a response body, you must always return a JSON objects (and not e.g. an array) as a top level data structure to support future extensibility. JSON objects support compatible extension by additional attributes. This allows you to easily extend your response and e.g. add pagination later, without breaking backwards compatibility.
+
+## {{ book.must }} Treat Open API Definitions As Open For Extension By Default
+
+The Open API 2.0 specification is not very specific on default extensibility 
+of objects, and redefines JSON-Schema keywords related to extensibility, like 
+`additionalProperties`. Following our overall compatibility guidelines, Open 
+API object definitions are considered open for extension by default as per 
+[Section 5.18 "additionalProperties"](http://json-schema.org/latest/json-schema-validation.html#rfc.section.5.18) of JSON-Schema. 
+
+When it comes to Open API 2.0, this means an `additionalProperties` declaration 
+is not required to make an object definition extensible:
+
+- API clients consuming data must not assume that objects are closed for 
+  extension in the absence of an `additionalProperties` declaration and must 
+  ignore fields sent by the server they cannot process. This allows API servers 
+  to evolve their data formats. 
+
+- For API servers receiving unxpected data, the situation is slightly different. 
+ Instead of ignoring fields, servers _may_ reject requests whose entities 
+ contain undefined fields in order to signal to clients that those fields 
+ would not be stored on behalf of the client. API designers must document 
+ clearly how unexpected fields are handled for PUT, POST and PATCH requests. 
+
+API formats must not declare `additionalProperties` to be false, as this 
+prevents objects being extended in the future.
+
+Note  that this guideline concentrates on default extensibility and does not 
+exclude the use of `additionalProperties` with a schema as a value, which might 
+be appropriate in some circumstances.
 
 ## {{ book.should }} Used Open-Ended List of Values (x-extensible-enum) Instead of Enumerations
 

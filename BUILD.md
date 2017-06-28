@@ -1,8 +1,12 @@
 # Build
 
+## Requirements
+
+You have to use node version 5.1.1 until we upgrade to current Gitbook version.
+
 ## Install all dependencies
 
-    make init
+    npm install
 
 ## Build static page
 

@@ -11,15 +11,30 @@ Use the following common money structure:
       properties:
         amount:
           type: number
+          description: Amount expressed as a decimal number of major currency units
           format: decimal
           example: 99.95
         currency:
           type: string
+          description: 3 letter currency code as defined by ISO-4217
           format: iso-4217
           example: EUR
       required:
         - amount
         - currency
+
+The decimal values for "amount" describe unit and subunit of the currency in a single value, where
+the digits before the decimal point are for the major unit and the digits after the decimal point are
+for the minor unit. Note that some business cases (e.g. transactions in Bitcoin) call for a higher
+precision, so applications must be prepared to accept values with unlimited precision, unless
+explicitly stated otherwise in the API specification.
+Examples for correct representations (in EUR):
+
+- `42.20` or `42.2` = 42 Euros, 20 Cent
+- `0.23` = 23 Cent
+- `42.0` or `42` = 42 Euros
+- `1024.42` = 1024 Euros, 42 Cent
+- `1024.4225` = 1024 Euros, 42.25 Cent
 
 Make sure that you don’t convert the “amount” field to `float` / `double` types when implementing
 this interface in a specific language or when doing calculations. Otherwise, you might lose
@@ -42,6 +57,13 @@ cases. Use it in your APIs — and compatible extend it if necessary for your AP
         description:
           a common address structure adequate for many use cases
         type: object
+        required:
+          - first_name
+          - last_name
+          - street
+          - city
+          - zip
+          - country_code
         properties:
           salutation:
             type: string
@@ -80,13 +102,6 @@ cases. Use it in your APIs — and compatible extend it if necessary for your AP
             type: string
             format: iso-3166-1-alpha-2
             example: DE
-        required:
-          - first_name
-          - last_name
-          - street
-          - city
-          - zip
-          - country_code
 
 ## {{ book.must }} Use Problem JSON
 
@@ -122,7 +137,7 @@ Stack traces contain implementation details that are not part of an API, and on 
 should never rely. Moreover, stack traces can leak sensitive information that partners and third
 parties are not allowed to receive and may disclose insights about vulnerabilities to attackers.
 
-### {{ book.must }} Use common field names
+## {{ book.must }} Use common field names
 
 There are some data fields that come up again and again in API data. We describe four here:
 
@@ -132,6 +147,6 @@ There are some data fields that come up again and again in API data. We describe
 
 - `modified`: when the object was updated. If used this must be a date-time construct.
 
-- `type`: the kind of thing this object is. If used this should be a string. Types allow runtime information on the entity provided that otherwise requires examining the Open API file. 
+- `type`: the kind of thing this object is. If used the type of this field should be a string. Types allow runtime information on the entity provided that otherwise requires examining the Open API file. 
 
 These properties are not always strictly neccessary, but making them idiomatic allows API client developers to build up a common understanding of Zalando's resources. There is very little utility for API consumers in having different names or value types for these fields across APIs. 

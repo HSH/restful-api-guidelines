@@ -10,6 +10,11 @@ Request:
 
 The added benefit is that you already have a service for browsing and filtering article locks.
 
+## {{book.should}} Model complete business processes
+An API should contain the complete business processes containing all resources representing the process. This enables clients to understand the business process, foster a consistent design of the business process, allow for synergies from description and implementation perspective, and eliminates implicit invisible dependencies between APIs.
+
+In addition, it prevents services from being designed as thin wrappers around databases, which normally tends to shift business logic to the clients.
+
 ## {{ book.should }} Define *useful* resources
 
 As a rule of thumb resources should be defined to cover 90% of all its client's use cases. A *useful* resource should
@@ -20,7 +25,7 @@ clients to specify their needs for more/less information by supporting filtering
 ## {{ book.must }} Keep URLs Verb-Free
 
 The API describes resources, so the only place where actions should appear is in the HTTP methods.
-In URLs, use only nouns.
+In URLs, use only nouns. Instead of thinking of actions (verbs), it's often helpful to think about putting a message in a letter box: e.g., instead of having the verb *cancel* in the url, think of sending a message to cancel an order to the *cancellations* letter box on the server side.
 
 ## {{ book.must }} Use Domain-Specific Resource Names
 
@@ -28,16 +33,64 @@ API resources represent elements of the application’s domain model. Using doma
 
 ## {{ book.must }} Identify resources and Sub-Resources via Path Segments
 
+Some API resources may contain or reference sub-resources. Embedded sub-resources, which are not top-level resources,
+are parts of a higher-level resource and cannot be used outside of its scope. Sub-resources should be referenced
+by their name and identifier in the path segments.
+
+Composite identifiers must not contain “/” as a separator. In order to improve the consumer experience, you should
+aim for intuitively understandable URLs, where each sub-path is a valid reference to a resource or a set of resources.
+For example, if “/customers/12ev123bv12v/addresses/DE\_100100101” is a valid path of your API, then
+“/customers/12ev123bv12v/addresses”, “/customers/12ev123bv12v” and “/customers” must be valid as well in principle.
+
 Basic URL structure:
 
     /{resources}/[resource-id]/{sub-resources}/[sub-resource-id]
+    /{resources}/[partial-id-1][separator][partial-id-2]
 
 Examples:
 
     /carts/1681e6b88ec1/items
     /carts/1681e6b88ec1/items/1
+    /customers/12ev123bv12v/addresses/DE_100100101
 
-## {{ book.could }} Consider Using (Non-) Nested URLs
+
+## {{ book.should }} Only Use UUIDs If Necessary
+
+Generating IDs can be a scaling problem in high frequency and near real time use cases. 
+UUIDs solve this problem, as they can be generated without collisions in a distributed, 
+non-coordinated way and without additional server roundtrips.
+
+However, they also come with some disadvantages:
+
+* pure technical key without meaning; not ready for naming or name scope conventions 
+that might be helpful for pragmatic reasons, e.g. we learned to use names for 
+product attributes, instead of UUIDs 
+* less usable, because...
+   * cannot be memorized and easily communicated by humans
+   * harder to use in debugging and logging analysis
+   * less convenient for consumer facing usage
+* quite long: readable representation requires 36 characters and comes with 
+higher memory and bandwidth consumption 
+* not ordered along their creation history and no indication of used id volume
+* may be in conflict with additional backward compatibility support of legacy ids
+
+UUIDs should be avoided were not needed for large scale id generation. 
+Instead, for instance, server side support with id generation can be preferred (POST on id resource, 
+followed by idempotent PUT on entity resource). 
+Usage of UUIDs is especially discouraged as primary keys of master and configuration data, 
+like brand-ids or attribute-ids which have low id volume but widespread steering functionality. 
+
+In any case, we should always use string rather than number type for identifiers. 
+This gives us more flexibility to evolve the identifier naming scheme. 
+Accordingly, if used as identifiers, UUIDs should not be qualified using a format property.
+
+Hint: Usually, random UUID is used - see UUID version 4 in [RFC 4122](https://tools.ietf.org/html/rfc4122). 
+Though UUID version 1 also contains leading timestamps it is not reflected by its lexicographic sorting.
+This deficit is addressed by [ULID](https://github.com/alizain/ulid) (Universally Unique Lexicographically Sortable Identifier). 
+You may favour ULID instead of UUID, for instance, for pagination use cases ordered along creation time. 
+
+
+## {{ book.may }} Consider Using (Non-) Nested URLs
 
 If a sub-resource is only accessible via its parent resource and may not exists without parent resource, consider using a nested URL structure, for instance:
 
@@ -51,6 +104,8 @@ However, if the resource can be accessed directly via its unique id, then the AP
 ## {{ book.should }} Limit number of Resources
 
 To keep maintenance and service evolution manageable, we should follow "functional segmentation" and "separation of concern" design principles and do not mix different business functionalities in same API definition. In this sense the number of resources exposed via API should be limited - our experience is that a typical range of resources for a well-designed API is between 4 and 8. There may be exceptions with more complex business domains that require more resources, but you should first check if you can split them into separate subdomains with distinct APIs.
+
+Nevertheless one API should hold all necessary resources to model complete business processes helping clients to understand these flows.
 
 ## {{ book.should }} Limit number of Sub-Resource Levels
 
